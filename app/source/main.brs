@@ -19,32 +19,37 @@ sub main(params as object)
 
     connections = {}
 
+    ' Setup the applicationtheme
+    initTheme()
+
     ' Set opaque background
-    canvas = createObject("roImageCanvas")
-    canvas.setLayer(0, { Color: "#FF000000", CompositionMode: "Source" })
-    canvas.show()
-    
-    ' Make a landing page layer
-    screen = canvas.getCanvasRect()
-    items = [
+    screen = createObject("roListScreen")
+    screenPort = createObject("roMessagePort")
+    screen.setMessagePort(screenPort)
+
+    screen.SetBreadcrumbText("Home", "")
+
+    menuFunctions = [
+        createIntroduction,
+        createRecentHistory
+    ]
+
+    contentList = [
         {
-            Text: "Firefox for Roku",
-            TextAttrs: {
-                Color: "#FFCCCCCC",
-                Font: "Large",
-                HAlign: "HCenter",
-                VAlign: "VCenter",
-                Direction: "LeftToRight"
-            },
-            TargetRect: {
-                x: 0,
-                y: 0,
-                w: screen.w,
-                h: screen.h
-            }
+            Title: "Introduction",
+            ID: "1",
+            HDBackgroundImageUrl: "pkg:/images/mm_icon_focus_hd.png",
+            SDBackgroundImageUrl: "pkg:/images/mm_icon_focus_sd.png",            
+            ShortDescriptionLine1: "Long tap on a video in Firefox for Android to send it to your TV!",
+        },
+        {
+            Title: "Recent History",
+            ID: "2",
+            ShortDescriptionLine1: "There is no recent history",
         }
     ]
-    canvas.setLayer(1, items)
+    screen.SetContent(contentList)
+    screen.show()
 
     ' Wait until we get a command to load a video
     while true
@@ -72,7 +77,7 @@ sub main(params as object)
                     print "received is " received
                     if len(received) > 0 then
                         params = parseJSON(received)
-                        if params.type = "LOAD"
+                        if params.type = "LOAD" then
                             print "Reading params: "; params.src
                             videoParams = createObject("roAssociativeArray")
                             videoParams.url = params.src
@@ -95,6 +100,15 @@ sub main(params as object)
                 end if
             end if
         end if
+
+        event = wait(100, screen.getMessagePort())
+        if type(event) = "roListScreenEvent" then
+            if event.isListItemFocused() then
+                screen.setBreadcrumbText(contentList[event.getIndex()].Title, "")
+            else if event.isListItemSelected() then
+                menuFunctions[event.getIndex()]()
+            endif      
+        endif
     end while
 
     ' Close the server
