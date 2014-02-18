@@ -1,0 +1,93 @@
+' This Source Code Form is subject to the terms of the Mozilla Public
+' License, v. 2.0. If a copy of the MPL was not distributed with this file,
+' You can obtain one at http://mozilla.org/MPL/2.0/.
+
+function setupServer() as object
+    this = {
+        protocolVersion: 1
+        port: createObject("roMessagePort")
+        server: createObject("roStreamSocket")
+        connections: {}
+        listen: server_listen
+        processEvents: server_processEvents
+        close: server_close
+    }
+
+    ' Seup the communications server
+    socketAddr = createObject("roSocketAddress")
+    socketAddr.setPort(9191)
+    this.server.setMessagePort(this.port)
+    this.server.setAddress(socketAddr)
+    this.server.notifyReadable(true)
+    this.server.listen(4)
+    if not this.server.eOK()
+        print "Error creating listen socket"
+        stop
+    end if
+
+    return this
+end function
+
+function server_listen(event as object) as void
+
+end function
+
+function server_processEvents() as void
+    event = wait(100, m.server.getMessagePort())
+    if type(event) = "roSocketEvent" then
+        changedID = event.getSocketID()
+        if changedID = m.server.getID() and m.server.isReadable() then
+            ' New
+            newConnection = m.server.accept()
+            if newConnection = invalid then
+                print "accept failed"
+            else
+                print "accepted new connection " changedID
+                newConnection.notifyReadable(true)
+                newConnection.setMessagePort(m.server.getMessagePort())
+                m.connections[stri(newConnection.getID())] = newConnection
+                newConnection.sendStr("connected")
+            end if
+        else
+            ' Activity on an open connection
+            connection = m.connections[stri(changedID)]
+            closed = false
+            if connection.isReadable() then
+                received = connection.receiveStr(2048)
+                print "received is " received
+                if len(received) > 0 then
+                    params = parseJSON(received)
+                    if params.type = "LOAD" then
+                        print "Reading params: "; params.source
+                        videoParams = {
+                            url: params.source
+                            title: params.title
+                            poster: params.poster
+                        }
+                        saveToHistory(videoParams)
+                        playVideo(m, connection, videoParams)
+                        return
+                    end if
+                    ' If we are unable to send, just drop data for now.
+                    ' You could use notifywritable and buffer data, but that is
+                    ' omitted for clarity.
+                else if len(received) = 0 then
+                    ' Client closed
+                    closed = true
+                end if
+            end if
+            if closed or not connection.eOK() then
+                print "closing connection " changedID
+                connection.close()
+                m.connections.delete(stri(changedID))
+            end if
+        end if
+    end if
+end function
+
+function server_close(context as object) as void
+    m.server.close()
+    for each id in m.connections
+        m.connections[id].close()
+    end for
+end function
