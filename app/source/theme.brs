@@ -16,13 +16,16 @@ function initTheme() as void
 
     theme.OverhangOffsetHD_X = "70"
     theme.OverhangOffsetHD_Y = "30"
-    theme.OverhangSliceHD = "pkg:/images/background_hd.jpg"
+    theme.OverhangSliceHD = "pkg:/images/background_hd.png"
     theme.OverhangLogoHD = "pkg:/images/logo_hd.png"
     theme.OverhangHeightHD = "110"
 
+    theme.ListItemHighlightHD = "pkg:/images/select_bkgnd.png"
+    theme.ListItemHighlightSD = "pkg:/images/select_bkgnd.png"
+
     theme.GridScreenLogoOffsetHD_X = "70"
     theme.GridScreenLogoOffsetHD_Y = "30"
-    theme.GridScreenOverhangSliceHD = "pkg:/images/background_hd.jpg"
+    theme.GridScreenOverhangSliceHD = "pkg:/images/background_hd.png"
     theme.GridScreenLogoHD = "pkg:/images/logo_hd.png"
     theme.GridScreenOverhangHeightHD = "110"
 
@@ -37,11 +40,13 @@ function initTheme() as void
     ' The general idea is that we have a small number of colors for text
     ' and try to set them appropriately for each screen type.
 
-    background = "#363636"
-    titleText = "#BFBFBF"
-    normalText = "#999999"
-    detailText = "#74777A"
-    subtleText = "#525252"
+    background = "#2D2D2D"
+    titleText = "#EAEFF2"
+    normalText = "#EAEFF2"
+    detailText = "#EAEFF2"
+    subtleText = "#EAEFF2"
+    listItemHighlightText = "#4D4E53"
+    listItemText = "#EAEFF2"
 
     theme.BackgroundColor = background
 
@@ -54,8 +59,8 @@ function initTheme() as void
     ' Defaults for all GridScreenDescriptionXXX
 
     theme.ListScreenHeaderText = titleText
-    theme.ListItemText = normalText
-    theme.ListItemHighlightText = titleText
+    theme.ListItemText = listItemText
+    theme.ListItemHighlightText = listItemHighlightText
     theme.ListScreenDescriptionText = normalText
 
     theme.ParagraphHeaderText = titleText

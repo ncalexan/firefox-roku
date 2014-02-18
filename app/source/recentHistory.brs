@@ -2,88 +2,125 @@
 ' License, v. 2.0. If a copy of the MPL was not distributed with this file,
 ' You can obtain one at http://mozilla.org/MPL/2.0/.
 
-function createRecentHistory() as integer
-    screen = createObject("roGridScreen")
-    port = createObject("roMessagePort")
-    screen.setMessagePort(port)
-    
-    screen.SetBreadcrumbText("Home", "Recent History")
-    screen.SetupLists(2)
-    screen.SetListNames(["Healthy Choices", "Tasty Choices"])
+function createRecentHistory(server as object) as integer
+    this = {
+        port: createObject("roMessagePort")
+        screen: createObject("roGridScreen")
+        content: getContentList_main()
+        eventLoop: eventLoop_history
+    }
 
-    screen.SetContentList(0, GetLunchMenuOptions_Healthy())    
-    screen.SetContentList(1, GetLunchMenuOptions_Tasty())
-        
-    screen.show()
-    
+    this.screen.setMessagePort(this.port)
+
+    ' Set up the grid before calling setupLists()
+    this.screen.setBreadcrumbText("Home", "Recent History")
+    this.screen.setUpBehaviorAtTopRow("exit")
+    this.screen.setDisplayMode("scale-to-fill")
+    this.screen.setGridStyle("two-row-flat-landscape-custom")
+
+    this.screen.setupLists(2)
+    this.screen.setListNames(["History", "About Mozilla & Firefox"])
+
+    this.screen.setContentList(0, getRecentList())
+    this.screen.setContentList(1, getDefaultList())
+
+    ' Must be called after setupLists()
+    this.screen.setDescriptionVisible(false)
+
+    this.screen.show()
+
+    this.eventLoop(server)
+end function
+
+function eventLoop_history(server as object)
     while (true)
-        event = wait(0, port)
+        server.processEvents()
+
+        event = wait(0, m.screen.getMessagePort())
         if type(event) = "roGridScreenEvent" then
-            if event.isScreenClosed() then
+            print "msg= "; event.GetMessage() " , index= "; event.GetIndex(); " data= "; event.getData()
+            if event.isListItemFocused() then
+                print "list item focused | current show = "; event.GetIndex()
+            else if event.isListItemSelected() then
+                row = event.GetIndex()
+                selection = event.getData()
+                print "list item selected row= "; row; " selection= "; selection
+            else if event.isScreenClosed() then
                 return -1
-            endif
-        endif
+            end if
+        end if
     end while
 end function
 
-function GetLunchMenuOptions_Healthy() as object
-        options = [
-            { Title: "Fruit"
-              Description: "A Variety of Fresh Fruit"
-              HDPosterUrl:"pkg://images/fruit.jpg"
-              SDPosterUrl:"pkg://images/fruit.jpg"
-            }
-            { Title: "Salad"
-              Description: "Straight from Local Growers"
-              HDPosterUrl:"pkg://images/salad.jpg",
-              SDPosterUrl:"pkg://images/salad.jpg",
-            }            
-            { Title: "Yogurt"
-              Description: "Always a Good Choice"
-              HDPosterUrl:"pkg://images/yogurt.jpg",
-              SDPosterUrl:"pkg://images/yogurt.jpg",
-            }
-            { Title: "Smoothies"
-              Description: "In a Variety of Great Fruit Flavors"
-              HDPosterUrl:"pkg://images/smoothie.jpg",
-              SDPosterUrl:"pkg://images/smoothie.jpg",
-            }
-            { Title: "Celery Sticks"
-              Description: "A Desperate Last Resort"
-              HDPosterUrl:"pkg://images/celery.jpg",
-              SDPosterUrl:"pkg://images/celery.jpg",
-            }
-       ]
-       return options
+function getRecentList() as object
+    list = []
+    json = registryRead("history")
+    if json <> invalid then
+        history = parseJSON(json)
+        for each video in history
+            list.push({
+                Title: video.title
+                Description: video.description
+                HDPosterUrl: video.poster
+                SDPosterUrl: video.poster
+                VideoUrl: video.url
+            })
+        end for
+        return list
+    end if
+
+    ' Add an empty placeholder
+    list.push({
+        Title: "No Recent Videos"
+        Description: "Watch some videos!"
+        HDPosterUrl: "pkg://images/fruit.jpg"
+        SDPosterUrl: "pkg://images/fruit.jpg"
+    })
+   return list
 end function
 
-function GetLunchMenuOptions_Tasty() as object
-        options = [
-            { Title: "American"
-              Description: "The Classic Burger"
-              HDPosterUrl:"pkg://images/burger.jpg"
-              SDPosterUrl:"pkg://images/burger.jpg"
-            }
-            { Title: "Chinese"
-              Description: "Served with plenty of MSG"
-              HDPosterUrl:"pkg://images/chinese.jpg",
-              SDPosterUrl:"pkg://images/chinese.jpg",
-            }            
-            { Title: "Japanese"
-              Description: "We have lots of sushi"
-              HDPosterUrl:"pkg://images/sushi.jpg",
-              SDPosterUrl:"pkg://images/sushi.jpg",
-            }
-            { Title: "Mexican"
-              Description: "Great Burritos"
-              HDPosterUrl:"pkg://images/mexican.jpg",
-              SDPosterUrl:"pkg://images/mexican.jpg",
-            }
-            { Title: "Indian"
-              Description: "Curries and More"
-              HDPosterUrl:"pkg://images/indian.jpg",
-              SDPosterUrl:"pkg://images/indian.jpg",
-            }
-       ]
-       return options
+function getDefaultList() as object
+    jsonAsString = readAsciiFile("pkg:/json/defaults.json")
+    history = parseJSON(jsonAsString)
+    list = []
+    for each video in history
+        list.Push({
+            Title: video.title
+            Description: video.description
+            HDPosterUrl: video.poster
+            SDPosterUrl: video.poster
+            VideoUrl: video.url
+        })
+    end for
+    return list
 end function
+
+sub saveToHistory(args as dynamic)
+    print args.url
+    history = []
+    json = registryRead("history")
+    if json <> invalid then
+        print json
+        history = parseJSON(json)
+        if history = invalid then
+            history = []
+        end if
+    end if
+
+    history.push({
+        title: args.title
+        description: "Empty"
+        poster: args.poster
+        url: args.url
+    })
+
+    if history.count() > 10 then
+        history.shift()
+    end if
+
+    ' TODO: Remove duplicates
+
+    json = toJSON(history)
+    print json
+    registryWrite("history", json)
+end sub
