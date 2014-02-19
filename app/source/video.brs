@@ -5,6 +5,7 @@ function playVideo(server as object, connection as object, args as dynamic) as v
         progress: 0 ' buffering progress
         position: 0 ' playback position (in seconds)
         status: "unknown"
+        updateStatus: video_updateStatus
         canvas: createObject("roImageCanvas") ' overlay
         player: createObject("roVideoPlayer")
         paint: video_paint
@@ -30,59 +31,79 @@ function playVideo(server as object, connection as object, args as dynamic) as v
     this.eventLoop(server)
 end function
 
+function video_updateStatus(status as string)
+    m.status = status
+    if m.connection <> invalid then
+        m.connection.sendStr(m.status)
+    end if
+end function
+
 function video_eventLoop(server as object)
     while true
-        event = wait(100, m.player.getMessagePort())
-        if type(event) = "roVideoPlayerEvent"
+        event = wait(100, m.port)
+        if type(event) = "roVideoPlayerEvent" then
             if event.isScreenClosed() then
                 print "Closing video screen"
                 exit while
-            else if event.isStreamStarted()
-                m.status = "started"
-                m.connection.sendStr(m.status)
+            else if event.isStreamStarted() then
+                m.updateStatus("started")
                 m.paint()
-            else if event.isPaused()
-                m.status = "paused"
-                m.connection.sendStr(m.status)
+            else if event.isPaused() then
+                m.updateStatus("paused")
                 m.paint()
-            else if event.isResumed()
-                m.status = "started"
-                m.connection.sendStr(m.status)
+            else if event.isResumed() then
+                m.updateStatus("started")
                 m.paint()
-            else if event.isFullResult()
-                m.status = "completed"
-                m.connection.sendStr(m.status)
-            else if event.isRequestFailed()
-                m.status = "failed"
-                m.connection.sendStr(m.status)
+            else if event.isFullResult() then
+                m.updateStatus("completed")
+            else if event.isRequestFailed() then
+                m.updateStatus("failed")
                 print "Play failed: "; event.getMessage()
             else
                 print "Unknown event: "; event.getType(); " msg: "; event.getMessage()
             endif
         end if
 
-        event = wait(100, server.port)
-        if type(event) = "roSocketEvent" then
-            closed = false
-            if m.connection.getID() = event.getSocketID() and m.connection.isReadable() then
-                received = m.connection.receiveStr(2048)
-                print "received is " received
-                if len(received) > 0 then
-                    params = parseJSON(received)
-                    if params.type = "PLAY" and m.status = "paused" then
+        if type(event) = "roImageCanvasEvent" then
+            if event.isRemoteKeyPressed() then
+                index = event.getIndex()
+                if index = 0 then '<BACK>
+                    m.player.stop()
+                    exit while
+                else if index = 13 then '<PAUSE/PLAY>
+                    if m.status = "paused" then
                         m.player.resume()
-                    else if params.type = "STOP" and m.status = "started" then
+                    else
                         m.player.pause()
                     end if
-                else if len(received) = 0 then
-                    ' Client closed
-                    closed = true
                 end if
             end if
-            if closed or not m.connection.eOK() then
-                print "closing connection"
-                server.connections.delete(stri(m.connection.getID()))
-                m.connection.close()
+        end if
+
+        if server <> invalid then
+            event = wait(100, server.port)
+            if type(event) = "roSocketEvent" then
+                closed = false
+                if m.connection.getID() = event.getSocketID() and m.connection.isReadable() then
+                    received = m.connection.receiveStr(2048)
+                    print "received is " received
+                    if len(received) > 0 then
+                        params = parseJSON(received)
+                        if params.type = "PLAY" and m.status = "paused" then
+                            m.player.resume()
+                        else if params.type = "STOP" and m.status = "started" then
+                            m.player.pause()
+                        end if
+                    else if len(received) = 0 then
+                        ' Client closed
+                        closed = true
+                    end if
+                end if
+                if closed or not m.connection.eOK() then
+                    print "closing connection"
+                    server.connections.delete(stri(m.connection.getID()))
+                    m.connection.close()
+                end if
             end if
         end if
     end while

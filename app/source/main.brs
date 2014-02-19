@@ -2,7 +2,7 @@
 ' License, v. 2.0. If a copy of the MPL was not distributed with this file,
 ' You can obtain one at http://mozilla.org/MPL/2.0/.
 
-sub main(params as object)
+sub main(params as dynamic)
     this = {
         port: createObject("roMessagePort")
         screen: createObject("roListScreen")
@@ -21,14 +21,34 @@ sub main(params as object)
 
     this.screen.setContent(this.content)
 
+    ' Determine how we were launched. Values for params.source can be:
+    ' * Normal launch: "homescreen"
+    ' * Dev install:   "app-run-dev"
+    ' * ECP:           "external-control" (we also pass a 'version')
+    print "launch params: " params
+    launch = "homescreen"
+    version = 0
+    if params <> invalid then
+        print "Got params"
+        if params.source <> invalid then
+            print "Got source"
+            launch = params.source
+            if params.version <> invalid then
+                print "Got version"
+                version = params.version.toInt()
+            end if
+        end if
+    end if
+
     ' Only show the main screen if we were launched via home screen
-    if params = invalid then
-        this.screen.show()
-    else
-        version = params.remote
+    if launch = "external-control" then
         if version <> server.protocolVersion then
+            print "Bad version"
             showBadVersion()
         end if
+    else
+        print "show main screen"
+        this.screen.show()
     end if
 
     this.eventLoop(server)
@@ -67,7 +87,7 @@ function main_getContentList() as object
     {
         Title: "Recent History",
         ID: "2",
-        ShortDescriptionLine1: "There is no recent history",
+        ShortDescriptionLine1: "Browse videos you've recently watched",
         Handler: createRecentHistory
     }]
     return list

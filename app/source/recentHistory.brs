@@ -6,8 +6,8 @@ function createRecentHistory(server as object) as integer
     this = {
         port: createObject("roMessagePort")
         screen: createObject("roGridScreen")
-        content: getContentList_main()
-        eventLoop: eventLoop_history
+        history: []
+        eventLoop: history_eventLoop
     }
 
     this.screen.setMessagePort(this.port)
@@ -21,8 +21,10 @@ function createRecentHistory(server as object) as integer
     this.screen.setupLists(2)
     this.screen.setListNames(["History", "About Mozilla & Firefox"])
 
-    this.screen.setContentList(0, getRecentList())
-    this.screen.setContentList(1, getDefaultList())
+    this.history[0] = getRecentHistory()
+    this.history[1] = getDefaultHistory()
+    this.screen.setContentList(0, this.history[0])
+    this.screen.setContentList(1, this.history[1])
 
     ' Must be called after setupLists()
     this.screen.setDescriptionVisible(false)
@@ -32,7 +34,7 @@ function createRecentHistory(server as object) as integer
     this.eventLoop(server)
 end function
 
-function eventLoop_history(server as object)
+function history_eventLoop(server as object)
     while (true)
         server.processEvents()
 
@@ -45,6 +47,11 @@ function eventLoop_history(server as object)
                 row = event.GetIndex()
                 selection = event.getData()
                 print "list item selected row= "; row; " selection= "; selection
+                videoParams = {
+                    url: m.history[row][selection].VideoURL
+                }
+
+                playVideo(invalid, invalid, videoParams)
             else if event.isScreenClosed() then
                 return -1
             end if
@@ -52,7 +59,9 @@ function eventLoop_history(server as object)
     end while
 end function
 
-function getRecentList() as object
+' Global utilities for reading and saving history
+
+function getRecentHistory() as object
     list = []
     json = registryRead("history")
     if json <> invalid then
@@ -79,7 +88,7 @@ function getRecentList() as object
    return list
 end function
 
-function getDefaultList() as object
+function getDefaultHistory() as object
     jsonAsString = readAsciiFile("pkg:/json/defaults.json")
     history = parseJSON(jsonAsString)
     list = []
@@ -107,6 +116,13 @@ sub saveToHistory(args as dynamic)
         end if
     end if
 
+    ' If an existing entry is already in history, return without saving
+    for each item in history
+        if item.url = args.url then
+            return
+        end if
+    end for
+
     history.push({
         title: args.title
         description: "Empty"
@@ -117,8 +133,6 @@ sub saveToHistory(args as dynamic)
     if history.count() > 10 then
         history.shift()
     end if
-
-    ' TODO: Remove duplicates
 
     json = toJSON(history)
     print json
