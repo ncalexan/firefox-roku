@@ -4,6 +4,7 @@
 
 function createRecentHistory(server as object) as integer
     this = {
+        server: server
         port: createObject("roMessagePort")
         screen: createObject("roGridScreen")
         history: []
@@ -31,12 +32,14 @@ function createRecentHistory(server as object) as integer
 
     this.screen.show()
 
-    this.eventLoop(server)
+    this.eventLoop()
 end function
 
-function history_eventLoop(server as object)
+function history_eventLoop()
     while (true)
-        server.processEvents()
+        if m.server <> invalid then
+            m.server.processEvents()
+        end if
 
         event = wait(0, m.screen.getMessagePort())
         if type(event) = "roGridScreenEvent" then

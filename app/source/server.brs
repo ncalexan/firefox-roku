@@ -9,6 +9,7 @@ function setupServer() as object
         server: createObject("roStreamSocket")
         connections: {}
         listen: server_listen
+        makeResponse: server_makeResponse
         processEvents: server_processEvents
         close: server_close
     }
@@ -29,7 +30,14 @@ function setupServer() as object
 end function
 
 function server_listen(event as object) as void
+end function
 
+function server_makeResponse(status as string) as string
+    response = {
+        _s: status
+        _v: m.protocolVersion
+    }
+    return toJSON(response)
 end function
 
 function server_processEvents() as void
@@ -46,7 +54,7 @@ function server_processEvents() as void
                 newConnection.notifyReadable(true)
                 newConnection.setMessagePort(m.server.getMessagePort())
                 m.connections[stri(newConnection.getID())] = newConnection
-                newConnection.sendStr("connected")
+                newConnection.sendStr(m.makeResponse("connected"))
             end if
         else
             ' Activity on an open connection

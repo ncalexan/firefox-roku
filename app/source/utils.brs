@@ -52,15 +52,16 @@ function associativeArrayToJSON(array as object) as string
     for each key in array
         output = output + chr(34) + key + chr(34) + ": "
         value = array[key]
-        if type(value) = "roString" or type(value) = "String" then
+        valueType = type(value)
+        if valueType = "roString" or valueType = "String" then
             output = output + chr(34) + value + chr(34)
-        else if type(value) = "roInt" Or type(value) = "roFloat" then
-            output = output + value.ToStr()
-        else if type(value) = "roBoolean" then
+        else if valueType = "roInt" or valueType = "roInteger" or valueType = "roFloat" or valueType = "Float" then
+            output = output + value.toStr()
+        else if valueType = "roBoolean" or valueType = "Boolean" then
             output = output + iif( value, "true", "false" )
-        else if type(value) = "roArray" then
+        else if valueType = "roArray" then
             output = output + arrayToJSON(value)
-        else if type(value) = "roAssociativeArray" then
+        else if valueType = "roAssociativeArray" then
             output = output + associativeArrayToJSON(value)
         end if
         output = output + ","
@@ -77,15 +78,16 @@ function arrayToJSON(array as object) as string
     output = "["
    
     for each value in array
-        if type(value) = "roString" or type(value) = "String" then
+        valueType = type(value)
+        if valueType = "roString" or valueType= "String" then
             output = output + chr(34) + value + chr(34)
-        else if type(value) = "roInt" Or type(value) = "roFloat" then
+        else if valueType = "roInt" or valueType = "roInteger" or valueType = "roFloat" or valueType = "Float" then
             output = output + value.toStr()
-        else if type(value) = "roBoolean" then
+        else if valueType = "roBoolean" or valueType = "Boolean" then
             output = output + iif(value, "true", "false")
-        else if type(value) = "roArray" then
+        else if valueType = "roArray" then
             output = output + arrayToJSON(value)
-        else if type(value) = "roAssociativeArray" then
+        else if valueType = "roAssociativeArray" then
             output = output + associativeArrayToJSON(value)
         end if
         output = output + ","

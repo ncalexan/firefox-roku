@@ -1,5 +1,6 @@
 function playVideo(server as object, connection as object, args as dynamic) as void
     this = {
+        server: server
         connection: connection
         port: createObject("roMessagePort")
         progress: 0 ' buffering progress
@@ -28,17 +29,18 @@ function playVideo(server as object, connection as object, args as dynamic) as v
     this.player.play()
     this.status = "unknown"
 
-    this.eventLoop(server)
+    this.eventLoop()
 end function
 
 function video_updateStatus(status as string)
     m.status = status
-    if m.connection <> invalid then
-        m.connection.sendStr(m.status)
+    if m.server <> invalid and m.connection <> invalid then
+        response = m.server.makeResponse(status)
+        m.connection.sendStr(response)
     end if
 end function
 
-function video_eventLoop(server as object)
+function video_eventLoop()
     while true
         event = wait(100, m.port)
         if type(event) = "roVideoPlayerEvent" then
@@ -80,8 +82,8 @@ function video_eventLoop(server as object)
             end if
         end if
 
-        if server <> invalid then
-            event = wait(100, server.port)
+        if m.server <> invalid then
+            event = wait(100, m.server.port)
             if type(event) = "roSocketEvent" then
                 closed = false
                 if m.connection.getID() = event.getSocketID() and m.connection.isReadable() then
@@ -101,7 +103,7 @@ function video_eventLoop(server as object)
                 end if
                 if closed or not m.connection.eOK() then
                     print "closing connection"
-                    server.connections.delete(stri(m.connection.getID()))
+                    m.server.connections.delete(stri(m.connection.getID()))
                     m.connection.close()
                 end if
             end if
