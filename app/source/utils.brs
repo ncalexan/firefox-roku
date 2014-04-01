@@ -35,7 +35,7 @@ function registryDelete(key, section = invalid)
 end function
 
 ' Convert associative array (hash) to a JSON string
-' Borrowed from http://forums.roku.com/viewtopic.php?p=200229
+' Source: http://forums.roku.com/viewtopic.php?p=200229
 
 function toJSON(array as object) as string
     if type(array) = "roArray" then
@@ -105,5 +105,19 @@ function iif(condition, result1, result2)
         return result1
     else
         return result2
+    end if
+end function
+
+' Return the first IP address of the Roku device
+' Source: https://github.com/plexinc/roku-client-public
+
+function getFirstIPAddress()
+    device = createObject("roDeviceInfo")
+    addrs = device.getIPAddrs()
+    addrs.reset()
+    if addrs.isNext() then
+        return addrs[addrs.next()]
+    else
+        return invalid
     end if
 end function

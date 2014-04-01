@@ -141,3 +141,7 @@ sub saveToHistory(args as dynamic)
     print json
     registryWrite("history", json)
 end sub
+
+sub clearHistory()
+    registryDelete("history")
+end sub

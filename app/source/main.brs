@@ -15,7 +15,6 @@ sub main(params as dynamic)
     ' Setup the applicationtheme
     initTheme()
 
-    ' Set opaque background
     this.screen.setMessagePort(this.port)
     this.screen.setBreadcrumbText("Home", "")
 
@@ -44,7 +43,7 @@ sub main(params as dynamic)
     if launch = "external-control" then
         if version <> server.protocolVersion then
             print "Bad version"
-            showBadVersion()
+            showMessage("Connection Error", "Unable to connect to Firefox.")
         end if
     else
         print "show main screen"
@@ -79,8 +78,8 @@ function main_getContentList() as object
     list = [{
         Title: "Introduction",
         ID: "1",
-        HDBackgroundImageUrl: "pkg:/images/android-phone-tablet.png",
-        SDBackgroundImageUrl: "pkg:/images/android-phone-tablet.png",
+        HDBackgroundImageUrl: "pkg:/images/introduction_hd.png",
+        SDBackgroundImageUrl: "pkg:/images/introduction_sd.png",
         ShortDescriptionLine1: "Long tap on a video in Firefox for Android to send it to your TV!",
         Handler: createIntroduction
     },
@@ -89,30 +88,12 @@ function main_getContentList() as object
         ID: "2",
         ShortDescriptionLine1: "Browse videos you've recently watched",
         Handler: createRecentHistory
+    },
+    {
+        Title: "Help & Settings",
+        ID: "3",
+        ShortDescriptionLine1: "Troubleshooting and utilities",
+        Handler: createHelp
     }]
     return list
-end function
-
-function showBadVersion() as void
-    port = createObject("roMessagePort")
-    dialog = createObject("roMessageDialog")
-    dialog.setMessagePort(port)
-    dialog.setTitle("Connection Error")
-    dialog.setText("Unable to connect to Firefox.")
-
-    dialog.addButton(1, "Exit")
-    dialog.enableBackButton(true)
-    dialog.show()
-    while true
-        dlgMsg = wait(0, dialog.getMessagePort())
-        if type(dlgMsg) = "roMessageDialogEvent"
-            if dlgMsg.isButtonPressed()
-                if dlgMsg.getIndex() = 1
-                    exit while
-                end if
-            else if dlgMsg.isScreenClosed()
-                exit while
-            end if
-        end if
-    end while
 end function

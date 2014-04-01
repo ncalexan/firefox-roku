@@ -47,6 +47,12 @@ function video_eventLoop()
             if event.isScreenClosed() then
                 print "Closing video screen"
                 exit while
+            else if event.isStatusMessage() and event.GetMessage() = "startup progress" then
+                progress% = event.GetIndex() / 10
+                if m.progress < progress% then
+                    m.progress = progress%
+                    m.paint()
+                end if
             else if event.isStreamStarted() then
                 m.updateStatus("started")
                 m.paint()
@@ -60,7 +66,13 @@ function video_eventLoop()
                 m.updateStatus("completed")
             else if event.isRequestFailed() then
                 m.updateStatus("failed")
-                print "Play failed: "; event.getMessage()
+                print "Play failed: "; event.getIndex(); " msg: "; event.getMessage()
+                message = event.getMessage()
+                if message = "" then
+                    message = "Unable to play video"
+                endif
+                message = message + chr(10) + "Error: (" + event.getIndex().toStr() + ")"
+                showMessage("Playback Error", message)
             else
                 print "Unknown event: "; event.getType(); " msg: "; event.getMessage()
             endif
@@ -115,7 +127,51 @@ sub video_paint()
     list = []
     color = "#00000000" ' fully transparent
 
-    if m.status = "paused" then
+    if m.progress < 100 then
+        color = "#00a0a0a0"
+        screen = m.canvas.GetCanvasRect()
+        topBar% = (screen.h - 12) / 2
+        leftBar% = (screen.w - 532) / 2
+        progress_bar = {
+            TargetRect: { x: leftBar%, y: topBar%, w: 532, h: 12 },
+            url: "pkg:/images/loading_bar.png"
+        }
+
+        padding% = 20
+
+        topLogo% = topBar% - (79 + padding%)
+        leftLogo% = (screen.w - 81) / 2
+        list.Push({
+            TargetRect: { x: leftLogo%, y: topLogo%, w: 81, h: 79 },
+            url: "pkg:/images/loading_logo.png"
+        })
+
+        topText% = topBar% + (12 + padding%)
+        leftText% = (screen.w - 300) / 2
+        list.Push({
+            Text: "Loading..."
+            TextAttrs: { font: "large", color: "#707070" }
+            TargetRect: { x: leftText%, y: topText%, w: 300, h: 100 }
+        })
+        if m.progress > 0 and m.progress <= 13 then
+            progress_bar.url = "pkg:/images/loading_bar_1.png"
+        else if m.progress > 13 and m.progress <= 25 then
+            progress_bar.url = "pkg:/images/loading_bar_2.png"
+        else if m.progress > 25 and m.progress <= 38 then
+            progress_bar.url = "pkg:/images/loading_bar_3.png"
+        else if m.progress > 38 and m.progress <= 50 then
+            progress_bar.url = "pkg:/images/loading_bar_4.png"
+        else if m.progress > 50 and m.progress <= 63 then
+            progress_bar.url = "pkg:/images/loading_bar_5.png"
+        else if m.progress > 63 and m.progress <= 75 then
+            progress_bar.url = "pkg:/images/loading_bar_6.png"
+        else if m.progress > 75 and m.progress <= 88 then
+            progress_bar.url = "pkg:/images/loading_bar_7.png"
+        else
+            progress_bar.url = "pkg:/images/loading_bar_8.png"
+        end if
+        list.Push(progress_bar)
+    else if m.status = "paused" then
         print "Painting the paused text"
         color = "#80000000" ' semi-transparent black
         list.push({
@@ -125,8 +181,12 @@ sub video_paint()
         })
     end if
 
+    ' Clear previous contents
+    m.canvas.clearLayer(0)
+    m.canvas.clearLayer(1)
+
     m.canvas.allowUpdates(false)
-    m.canvas.SetLayer(0, { Color: color, CompositionMode: "Source" })
-    m.canvas.SetLayer(1, list)
+    m.canvas.setLayer(0, { Color: color, CompositionMode: "Source" })
+    m.canvas.setLayer(1, list)
     m.canvas.allowUpdates(true)
 end sub
