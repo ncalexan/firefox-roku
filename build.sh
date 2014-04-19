@@ -1,4 +1,6 @@
-rm ../firefox.zip
-cd app
-zip ../../firefox.zip -r .
-cd ..
+PACKAGE=firefox-roku.zip
+mkdir -p bin
+rm -f bin/$PACKAGE
+pushd app
+zip ../bin/$PACKAGE -r .
+popd
