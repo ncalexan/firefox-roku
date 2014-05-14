@@ -3,7 +3,7 @@
 ' You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-function showMessage(title As dynamic, message As dynamic) As Object
+function showMessage(title As dynamic, message As dynamic, buttons=invalid as dynamic) As object
     port = createObject("roMessagePort")
     dialog = createObject("roMessageDialog")
     dialog.setMessagePort(port)
@@ -11,8 +11,16 @@ function showMessage(title As dynamic, message As dynamic) As Object
     dialog.setTitle(title)
     dialog.setText(message)
 
-    dialog.addButton(0, "Back")
-    dialog.enableBackButton(true)
+    if buttons = invalid then
+        dialog.addButton(0, "Back")
+        dialog.enableBackButton(true)
+    else
+        index = 0
+        for each button in buttons
+            dialog.addButton(index, button)
+            index = index + 1
+        next
+    end if
 
     dialog.show()
 
@@ -30,27 +38,39 @@ function showMessage(title As dynamic, message As dynamic) As Object
     end while
 end function
 
-
-sub showBadVersion()
+function showPopup(title As dynamic, buttons As dynamic) As object
     port = createObject("roMessagePort")
     dialog = createObject("roMessageDialog")
     dialog.setMessagePort(port)
-    dialog.setTitle("Connection Error")
-    dialog.setText("Unable to connect to Firefox.")
 
-    dialog.addButton(1, "Exit")
+    dialog.setMenuTopLeft(true)
     dialog.enableBackButton(true)
+    dialog.enableOverlay(true)
+
+    dialog.setTitle(title)
+
+    index = 0
+    for each button in buttons
+        if button = "-" then
+            dialog.addButtonSeparator()
+        else
+            dialog.addButton(index, button)
+            index = index + 1
+        end if
+    next
+
     dialog.show()
+
     while true
         dlgMsg = wait(0, dialog.getMessagePort())
         if type(dlgMsg) = "roMessageDialogEvent"
-            if dlgMsg.isButtonPressed()
-                if dlgMsg.getIndex() = 1
-                    exit while
-                end if
-            else if dlgMsg.isScreenClosed()
-                exit while
-            end if
-        end if
+            if dlgMsg.isScreenClosed()
+                dialog = invalid
+                return -1
+            else if dlgMsg.isButtonPressed()
+                dialog = invalid
+                return dlgMsg.getIndex()
+            endif
+        endif
     end while
-end sub
+end function
