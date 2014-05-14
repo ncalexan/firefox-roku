@@ -72,13 +72,15 @@ function server_processEvents() as void
                             title: params.title
                             poster: params.poster
                         }
+
+                        ' TODO: Only save the video to history if it launched successfully
                         saveToHistory(videoParams)
+
                         playVideo(m, connection, videoParams)
                         return
                     end if
                     ' If we are unable to send, just drop data for now.
-                    ' You could use notifywritable and buffer data, but that is
-                    ' omitted for clarity.
+                    ' You could use notifywritable and buffer data.
                 else if len(received) = 0 then
                     ' Client closed
                     closed = true

@@ -77,23 +77,21 @@ end function
 function main_getContentList() as object
     list = [{
         Title: "Introduction",
-        ID: "1",
         HDBackgroundImageUrl: "pkg:/images/introduction_hd.png",
         SDBackgroundImageUrl: "pkg:/images/introduction_sd.png",
-        ShortDescriptionLine1: "Long tap on a video in Firefox for Android to send it to your TV!",
-        Handler: createIntroduction
+        handler: createIntroduction
     },
     {
         Title: "Recent History",
-        ID: "2",
-        ShortDescriptionLine1: "Browse videos you've recently watched",
-        Handler: createRecentHistory
+        HDBackgroundImageUrl: "pkg:/images/history_hd.png",
+        SDBackgroundImageUrl: "pkg:/images/history_sd.png",
+        handler: createRecentHistory
     },
     {
-        Title: "Help & Settings",
-        ID: "3",
-        ShortDescriptionLine1: "Troubleshooting and utilities",
-        Handler: createHelp
+        Title: "Help",
+        HDBackgroundImageUrl: "pkg:/images/help_hd.png",
+        SDBackgroundImageUrl: "pkg:/images/help_sd.png",
+        handler: createAbout
     }]
     return list
 end function

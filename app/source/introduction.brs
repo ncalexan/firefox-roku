@@ -2,7 +2,7 @@
 ' License, v. 2.0. If a copy of the MPL was not distributed with this file,
 ' You can obtain one at http://mozilla.org/MPL/2.0/.
 
-function createIntroduction(server as object) as integer
+function createIntroduction(server as object)
     this = {
         port: createObject("roMessagePort")
         screen: createObject("roListScreen")
@@ -36,28 +36,19 @@ end function
 
 function introduction_getContentList() as object
     list = [{
-        Title: "Welcome",
-        HDBackgroundImageUrl: "pkg:/images/introduction_hd.png",
-        SDBackgroundImageUrl: "pkg:/images/introduction_sd.png",
-        ShortDescriptionLine1: "Learn about how to use Firefox for Android to send videos to your TV",
+        Title: "Get the latest Firefox for Android",
+        HDBackgroundImageUrl: "pkg:/images/introduction_step1_hd.png",
+        SDBackgroundImageUrl: "pkg:/images/introduction_step1_sd.png",
     },
     {
-        Title: "Prepare your network",
-        HDBackgroundImageUrl: "pkg:/images/intro_1.png",
-        SDBackgroundImageUrl: "pkg:/images/intro_1.png",
-        ShortDescriptionLine1: "Install Firefox and make sure it's on the same network as your Roku",
+        Title: "Setup devices on the same Wifi network",
+        HDBackgroundImageUrl: "pkg:/images/introduction_step2_hd.png",
+        SDBackgroundImageUrl: "pkg:/images/introduction_step2_sd.png",
     },
     {
-        Title: "Sending videos",
-        HDBackgroundImageUrl: "pkg:/images/intro_2.png",
-        SDBackgroundImageUrl: "pkg:/images/intro_2.png",
-        ShortDescriptionLine1: "Long tap videos in Firefox to send them to your TV",
-    },
-    {
-        Title: "Control the playback",
-        HDBackgroundImageUrl: "pkg:/images/intro_3.png",
-        SDBackgroundImageUrl: "pkg:/images/intro_3.png",
-        ShortDescriptionLine1: "Use your device to control the video playback on your TV",
+        Title: "Cast a video to your Roku",
+        HDBackgroundImageUrl: "pkg:/images/introduction_step3_hd.png",
+        SDBackgroundImageUrl: "pkg:/images/introduction_step3_sd.png",
     }]
     return list
 end function

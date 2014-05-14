@@ -14,24 +14,36 @@ end function
 ' Notes: http://sdkdocs.roku.com/display/sdkdoc/roRegistry
 
 function registryRead(key, section = invalid)
-    if section = invalid then section = "Default"
+    if section = invalid then
+        section = "Default"
+    end if
     sec = createObject("roRegistrySection", section)
-    if sec.exists(key) then return sec.read(key)
+    if sec.exists(key) then
+        return sec.read(key)
+    end if
     return invalid
 end function
 
 function registryWrite(key, val, section = invalid)
-    if section = invalid then section = "Default"
+    if section = invalid then
+        section = "Default"
+    end if
     sec = createObject("roRegistrySection", section)
-    sec.write(key, val)
-    sec.flush()
+    if sec.write(key, val) then
+        return sec.flush()
+    end if
+    return false
 end function
 
 function registryDelete(key, section = invalid)
-    if section = invalid then section = "Default"
+    if section = invalid then
+        section = "Default"
+    end if
     sec = createObject("roRegistrySection", section)
-    sec.delete(key)
-    sec.flush()
+    if sec.delete(key) then
+        return sec.flush()
+    end if
+    return false
 end function
 
 ' Convert associative array (hash) to a JSON string
@@ -103,21 +115,46 @@ end function
 function iif(condition, result1, result2)
     if condition then
         return result1
-    else
-        return result2
     end if
+    return result2
 end function
 
 ' Return the first IP address of the Roku device
 ' Source: https://github.com/plexinc/roku-client-public
 
-function getFirstIPAddress()
+function getFirstIPAddress() as string
     device = createObject("roDeviceInfo")
     addrs = device.getIPAddrs()
     addrs.reset()
     if addrs.isNext() then
         return addrs[addrs.next()]
-    else
-        return invalid
     end if
+    return invalid
+end function
+
+function getAppVersion() as string
+    version = invalid
+    major = invalid
+    minor = invalid
+
+    manifest = ReadAsciiFile("pkg:/manifest")
+    lines = manifest.tokenize(chr(10))
+    for each line in lines
+        entry = line.tokenize("=")
+        if instr(entry[0], "major") <> 0 then
+            major = entry[1].trim()
+        end if
+        if instr(entry[0], "minor") <> 0 then
+            minor = entry[1].trim()
+        end if
+    end for
+
+    if major <> invalid then
+        version = major
+    end if
+    if minor <> invalid then
+        version = version + "." + minor
+    end if
+
+    return version
 end function

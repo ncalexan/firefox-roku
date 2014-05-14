@@ -10,28 +10,28 @@ function initTheme() as void
 
     theme.OverhangOffsetSD_X = "72"
     theme.OverhangOffsetSD_Y = "10"
-    theme.OverhangSliceSD = "pkg:/images/background_sd.jpg"
+    theme.OverhangSliceSD = "pkg:/images/overhang_sd.png"
     theme.OverhangLogoSD = "pkg:/images/logo_sd.png"
     theme.OverhangHeightSD = "70"
 
     theme.OverhangOffsetHD_X = "70"
     theme.OverhangOffsetHD_Y = "30"
-    theme.OverhangSliceHD = "pkg:/images/background_hd.png"
+    theme.OverhangSliceHD = "pkg:/images/overhang_hd.png"
     theme.OverhangLogoHD = "pkg:/images/logo_hd.png"
-    theme.OverhangHeightHD = "110"
+    theme.OverhangHeightHD = "124"
 
-    theme.ListItemHighlightHD = "pkg:/images/select_bkgnd.png"
-    theme.ListItemHighlightSD = "pkg:/images/select_bkgnd.png"
+    theme.ListItemHighlightHD = "pkg:/images/selectbar_hd.png"
+    theme.ListItemHighlightSD = "pkg:/images/selectbar_sd.png"
 
     theme.GridScreenLogoOffsetHD_X = "70"
     theme.GridScreenLogoOffsetHD_Y = "30"
-    theme.GridScreenOverhangSliceHD = "pkg:/images/background_hd.png"
+    theme.GridScreenOverhangSliceHD = "pkg:/images/overhangmenu_hd.png"
     theme.GridScreenLogoHD = "pkg:/images/logo_hd.png"
-    theme.GridScreenOverhangHeightHD = "110"
+    theme.GridScreenOverhangHeightHD = "124"
 
     theme.GridScreenLogoOffsetSD_X = "72"
     theme.GridScreenLogoOffsetSD_Y = "10"
-    theme.GridScreenOverhangSliceSD = "pkg:/images/background_sd.jpg"
+    theme.GridScreenOverhangSliceSD = "pkg:/images/overhangmenu_sd.png"
     theme.GridScreenLogoSD = "pkg:/images/logo_sd.png"
     theme.GridScreenOverhangHeightSD = "70"
 
@@ -40,13 +40,15 @@ function initTheme() as void
     ' The general idea is that we have a small number of colors for text
     ' and try to set them appropriately for each screen type.
 
-    background = "#2D2D2D"
+    background = "#282828"
     titleText = "#EAEFF2"
     normalText = "#EAEFF2"
     detailText = "#EAEFF2"
     subtleText = "#EAEFF2"
     listItemHighlightText = "#4D4E53"
     listItemText = "#EAEFF2"
+    black = "#000000"
+    white = "#ffffff"
 
     theme.BackgroundColor = background
 
@@ -66,11 +68,12 @@ function initTheme() as void
     theme.ParagraphHeaderText = titleText
     theme.ParagraphBodyText = normalText
 
-    theme.ButtonNormalColor = normalText
-    ' Default for ButtonHighlightColor seems OK...
-
-    theme.ButtonMenuHighlightText = titleText
-    theme.ButtonMenuNormalText = titleText
+    theme.ButtonMenuNormalOverlayText = white
+    theme.ButtonMenuNormalText = black
+    theme.ButtonNormalColor = black
+    theme.DialogBodyText = black
+    theme.ButtonHighlightColor = white
+    theme.DialogTitleText = black
 
     app.setTheme(theme)
 end function

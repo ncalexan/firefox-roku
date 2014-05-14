@@ -1,4 +1,4 @@
-function playVideo(server as object, connection as object, args as dynamic) as void
+function playVideo(server as object, connection as object, args as dynamic) as object
     this = {
         server: server
         connection: connection
@@ -29,7 +29,9 @@ function playVideo(server as object, connection as object, args as dynamic) as v
     this.player.play()
     this.status = "unknown"
 
-    this.eventLoop()
+    result = this.eventLoop()
+    print "video return: " result
+    return result
 end function
 
 function video_updateStatus(status as string)
@@ -40,13 +42,13 @@ function video_updateStatus(status as string)
     end if
 end function
 
-function video_eventLoop()
+function video_eventLoop() as object
     while true
         event = wait(100, m.port)
         if type(event) = "roVideoPlayerEvent" then
             if event.isScreenClosed() then
                 print "Closing video screen"
-                exit while
+                return 0
             else if event.isStatusMessage() and event.GetMessage() = "startup progress" then
                 progress% = event.GetIndex() / 10
                 if m.progress < progress% then
@@ -66,13 +68,28 @@ function video_eventLoop()
                 m.updateStatus("completed")
             else if event.isRequestFailed() then
                 m.updateStatus("failed")
-                print "Play failed: "; event.getIndex(); " msg: "; event.getMessage()
                 message = event.getMessage()
+                code = event.getIndex()
+                print "Play failed: "; code; " msg: "; message
                 if message = "" then
-                    message = "Unable to play video"
+                    if code = 0 then
+                        message = "Network Error: server down or unresponsive, server is unreachable, network setup problem on the client."
+                    else if code = -1 then
+                        message = "HTTP Error: malformed headers or HTTP error result."
+                    else if code = -2 then
+                        message = "HTTP Error: Connection timed out."
+                    else if code = -4 then
+                        message = "Stream Error: no streams were specified to play."
+                    else if code = -5 then
+                        message = "Media Error: the media format is unknown or unsupported."
+                    else
+                        ' code -3 is also unknown error
+                        message = "Unknown Error: Unable to play video."
+                    end if
                 endif
-                message = message + chr(10) + "Error: (" + event.getIndex().toStr() + ")"
+                message = message + chr(10) + "Code: (" + code.toStr() + ")"
                 showMessage("Playback Error", message)
+                return -1
             else
                 print "Unknown event: "; event.getType(); " msg: "; event.getMessage()
             endif
@@ -83,7 +100,7 @@ function video_eventLoop()
                 index = event.getIndex()
                 if index = 0 then '<BACK>
                     m.player.stop()
-                    exit while
+                    return 0
                 else if index = 13 then '<PAUSE/PLAY>
                     if m.status = "paused" then
                         m.player.resume()
@@ -121,6 +138,7 @@ function video_eventLoop()
             end if
         end if
     end while
+    return 0
 end function
 
 sub video_paint()

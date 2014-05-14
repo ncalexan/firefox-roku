@@ -9,5 +9,5 @@ splash_screen_sd=pkg:/images/splash_hd.png
 splash_color=#D4DDE4
 splash_min_time=3000
 major_version=1
-minor_version=4
+minor_version=10
 build_version=00000
